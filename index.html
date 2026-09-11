@@ -162,4 +162,575 @@
 
   @media print {
     body { background: #fff; }
-    .steps, .actions, .gear, .drawer, .overlay, .planner .field, footer, .toggle-group, .badge-card { display: none !
+    .steps, .actions, .gear, .drawer, .overlay, .planner .field, footer, .toggle-group, .badge-card { display: none !important; }
+    .view { display: block !important; }
+    #view1, #view2 { display: none !important; }
+    .panel { border: none; padding: 0; }
+    .plan-out { background: #fff; border: 1px solid #ccc; }
+    .hero-result { background: #fff; color: #000; border: 2px solid #000; }
+    .schedule th, .schedule td { border-color: #999; }
+  }
+</style>
+</head>
+<body>
+<button class="gear" id="gearBtn" title="Settings" aria-label="Settings">&#9881;</button>
+
+<div class="wrap">
+  <header>
+    <div class="kicker"><span>The Reading Planner</span><span>For Students</span></div>
+    <h1>Plan your reading,<br>page by page.</h1>
+    <p class="dek">Find your real reading speed, tell it what you have to read, and get a schedule that fits your deadline.</p>
+  </header>
+
+  <div class="steps">
+    <div class="step-tab active" data-tab="1"><span class="num">1</span>Speed test</div>
+    <div class="step-tab" data-tab="2"><span class="num">2</span>What to read</div>
+    <div class="step-tab" data-tab="3"><span class="num">3</span>Your plan</div>
+  </div>
+
+  <div class="panel">
+
+    <!-- STEP 1 -->
+    <section class="view active" id="view1">
+      <h2>How fast do you read?</h2>
+      <p class="sub">Read the passage at your normal pace — no rushing. Hit start, read to the end, then answer a couple of quick questions so we know it's an honest speed.</p>
+      <div class="timer-bar"><div><div class="t" id="timerDisplay">0:00</div><div class="cap" id="timerCap">Timer ready</div></div></div>
+      <div class="passage test-hidden" id="passage"></div>
+      <div class="actions" id="testControls">
+        <button class="btn primary" id="startTest">Start reading</button>
+        <button class="btn" id="finishTest" style="display:none;">I've finished</button>
+        <div class="spacer"></div>
+        <span class="alt-link" id="useSaved" style="display:none;"></span>
+        <span class="alt-link" id="skipTest">Skip &middot; use average &rsaquo;</span>
+      </div>
+      <div id="comprehension" style="display:none; margin-top:24px;">
+        <div class="label" style="margin-bottom:14px;">Quick comprehension check</div>
+        <div class="quiz" id="quiz"></div>
+        <div class="actions">
+          <button class="btn primary" id="checkAnswers">Check answers</button>
+          <div class="spacer"></div>
+          <span class="alt-link" id="skipQuiz">Skip questions &rsaquo;</span>
+        </div>
+      </div>
+      <div id="testResult" style="display:none; margin-top:24px;">
+        <div class="result-card">
+          <div class="label" style="color:var(--accent);">Your reading speed</div>
+          <div class="big"><span id="wpmResult">0</span> <small>wpm</small></div>
+          <div class="tag" id="wpmLabel">Average reader</div>
+          <div class="compre" id="compreNote"></div>
+        </div>
+        <div class="actions">
+          <button class="btn primary" id="toStep2">Continue &rsaquo;</button>
+          <button class="btn ghost" id="retakeTest">Retake test</button>
+          <div class="spacer"></div>
+          <span class="alt-link" id="manualEntry">Enter speed manually &rsaquo;</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- STEP 2 -->
+    <section class="view" id="view2">
+      <h2>What are you reading?</h2>
+      <p class="sub">A book you're counting by pages, or an article you can paste in.</p>
+
+      <div class="toggle-group" id="sourceToggle">
+        <button data-src="book" class="active">A book</button>
+        <button data-src="article">An article / text</button>
+      </div>
+
+      <!-- BOOK -->
+      <div id="bookSource">
+        <div class="field">
+          <label class="label" for="bookTitle">Book title</label>
+          <input type="text" id="bookTitle" placeholder="e.g. To Kill a Mockingbird">
+        </div>
+        <div class="toggle-group" id="amountToggle">
+          <button data-mode="count" class="active">By pages</button>
+          <button data-mode="range">By page range</button>
+        </div>
+        <div id="countFields">
+          <div class="row">
+            <div class="field"><label class="label" for="pages">Pages to read</label><input type="number" id="pages" min="1" placeholder="e.g. 80"></div>
+            <div class="field"><label class="label" for="startPage">Starting on page</label><input type="number" id="startPage" min="1" placeholder="e.g. 1" value="1"><div class="hint">Used to label your schedule.</div></div>
+          </div>
+        </div>
+        <div id="rangeFields" style="display:none;">
+          <div class="row">
+            <div class="field"><label class="label" for="fromPage">From page</label><input type="number" id="fromPage" min="1" placeholder="e.g. 40"></div>
+            <div class="field"><label class="label" for="toPage">To page</label><input type="number" id="toPage" min="1" placeholder="e.g. 120"></div>
+          </div>
+        </div>
+        <div class="field">
+          <label class="label" for="bookType">Type of book <span style="text-transform:none; letter-spacing:0; font-weight:normal;">— sets words per page</span></label>
+          <select id="bookType">
+            <option value="275">Novel / paperback (~275 wpp)</option>
+            <option value="200">Kids / young adult (~200 wpp)</option>
+            <option value="500">Textbook (~500 wpp)</option>
+            <option value="650">Dense / academic (~650 wpp)</option>
+            <option value="custom">Custom / exact count…</option>
+          </select>
+          <div class="hint"><span class="alt-link" id="measureToggle">Measure my page exactly &rsaquo;</span></div>
+        </div>
+        <div class="measure-box" id="measureBox" style="display:none;">
+          <div class="hint" style="margin-top:0; margin-bottom:12px;">Count the words in one full line, and the lines on a full page. I'll do the math.</div>
+          <div class="mrow">
+            <div><label class="label" for="wordsPerLine">Words / line</label><input type="number" id="wordsPerLine" min="1" placeholder="e.g. 12"></div>
+            <div><label class="label" for="linesPerPage">Lines / page</label><input type="number" id="linesPerPage" min="1" placeholder="e.g. 30"></div>
+            <div><button class="btn ghost" id="applyMeasure">Use this</button></div>
+          </div>
+          <div class="hint" id="measureResult"></div>
+        </div>
+        <div class="field" id="customWppField" style="display:none;">
+          <label class="label" for="customWpp">Words per page</label>
+          <input type="number" id="customWpp" min="50" value="275">
+        </div>
+      </div>
+
+      <!-- ARTICLE -->
+      <div id="articleSource" style="display:none;">
+        <div class="field">
+          <label class="label" for="articleUrl">Article URL <span style="text-transform:none; letter-spacing:0; font-weight:normal;">— optional, best effort</span></label>
+          <div class="url-row">
+            <input type="url" id="articleUrl" placeholder="https://…">
+            <button class="btn ghost" id="fetchBtn">Fetch</button>
+          </div>
+          <div class="hint" id="fetchHint">Browsers often block reading other sites. If fetch fails, just paste the text below.</div>
+        </div>
+        <div class="field">
+          <label class="label" for="articleText">Or paste the text</label>
+          <textarea id="articleText" placeholder="Paste the article, chapter, or any text here…"></textarea>
+          <div class="hint" id="articleCount">0 words</div>
+        </div>
+      </div>
+
+      <!-- DIFFICULTY (both) -->
+      <div class="field">
+        <label class="label" for="difficulty">Difficulty <span style="text-transform:none; letter-spacing:0; font-weight:normal;">— slows the estimate for harder text</span></label>
+        <select id="difficulty"></select>
+        <div class="diff-hint" id="diffHint"></div>
+      </div>
+
+      <div class="actions">
+        <button class="btn ghost" id="backTo1">&lsaquo; Back</button>
+        <div class="spacer"></div>
+        <button class="btn primary" id="toStep3" disabled>See how long it takes &rsaquo;</button>
+      </div>
+    </section>
+
+    <!-- STEP 3 -->
+    <section class="view" id="view3">
+      <div class="hero-result">
+        <div class="lead">Time to finish</div>
+        <div class="time" id="totalTime">0 min</div>
+        <div class="ctx" id="resultCtx"></div>
+      </div>
+      <div class="mini-stats">
+        <div class="s"><div class="n" id="s1n">0</div><div class="l" id="s1l">Pages</div></div>
+        <div class="s"><div class="n" id="s2n">0</div><div class="l" id="s2l">Words</div></div>
+        <div class="s"><div class="n" id="s3n">0</div><div class="l" id="s3l">Effective wpm</div></div>
+      </div>
+
+      <div class="planner badge-card">
+        <h3>Share it</h3>
+        <p class="psub">Copy a reading-time badge for a post, blog, or your notes.</p>
+        <div class="badge-preview" id="badgePreview">📖 4 min read</div>
+        <button class="btn" id="copyBadge">Copy badge</button>
+      </div>
+
+      <div class="planner">
+        <h3>Make it fit your deadline</h3>
+        <p class="psub">When is it due? I'll tell you how much to read each day.</p>
+        <div class="field"><label class="label" for="dueDate">Due date</label><input type="date" id="dueDate"></div>
+        <div class="plan-out" id="deadlineOut">Pick a due date to see your daily target.</div>
+      </div>
+      <div class="planner">
+        <h3>Or set your own pace</h3>
+        <p class="psub">How many minutes can you read per day?</p>
+        <div class="field"><label class="label" for="perDay">Minutes per day</label><input type="number" id="perDay" min="1" placeholder="e.g. 30"></div>
+        <div class="plan-out" id="paceOut">Enter your daily minutes to see when you'll finish.</div>
+      </div>
+
+      <div id="scheduleWrap"></div>
+
+      <div class="actions">
+        <button class="btn ghost" id="backTo2">&lsaquo; Back</button>
+        <div class="spacer"></div>
+        <button class="btn" id="startOver">Start over</button>
+      </div>
+    </section>
+
+  </div>
+
+  <footer>
+    <span>Speed measured from your own timed reading</span>
+    <span>Everything is saved on your device only</span>
+  </footer>
+</div>
+
+<div class="overlay" id="overlay"></div>
+<aside class="drawer" id="drawer">
+  <button class="close" id="closeDrawer">&times;</button>
+  <h3>Make it yours</h3>
+  <p class="dsub">Themes, colors, and fonts — saved automatically.</p>
+  <div class="sec">Themes</div>
+  <div class="theme-grid" id="themeGrid"></div>
+  <div class="sec">Colors</div>
+  <div class="color-row"><label>Background</label><input type="color" id="c-paper"></div>
+  <div class="color-row"><label>Panel</label><input type="color" id="c-panel"></div>
+  <div class="color-row"><label>Text</label><input type="color" id="c-ink"></div>
+  <div class="color-row"><label>Accent</label><input type="color" id="c-accent"></div>
+  <div class="sec">Fonts</div>
+  <div class="font-field"><label>Reading font (body)</label><select id="f-body"></select></div>
+  <div class="font-field"><label>Heading font</label><select id="f-display"></select></div>
+  <div class="font-field"><label>Interface font</label><select id="f-ui"></select></div>
+  <button class="btn ghost reset" id="resetSettings">Reset to default</button>
+</aside>
+
+<script>
+  // ============ PASSAGE + QUIZ ============
+  const PASSAGE_TEXT = `Every reader has a natural pace, and it is rarely the pace we imagine. Most people believe they read faster than they actually do, because the mind races ahead even when the eyes lag behind. The gap between the two is where daydreaming lives.
+
+Reading speed is not a fixed number. It bends with the material in front of you. A familiar story slides by quickly, while a page thick with new terms forces you to slow down and reread. This is normal, and it is worth remembering when you plan your time around a difficult book.
+
+The test you are taking right now is meant to catch your comfortable, everyday speed. Do not push yourself to go faster than usual, and do not slow down to seem careful. Just read the way you would read a chapter on a quiet afternoon, and let the timer do the rest.
+
+When you finish, you will have a number you can actually trust. Use it to break a long assignment into pieces that fit your week, so the reading feels less like a wall and more like a set of small, reachable steps.`;
+  const passageEl = document.getElementById('passage');
+  const PASSAGE_WORDS = PASSAGE_TEXT.trim().split(/\s+/).length;
+  passageEl.innerHTML = PASSAGE_TEXT.split(/\n\s*\n/).map(p => '<p>' + p.trim() + '</p>').join('');
+  const QUESTIONS = [
+    { q: 'According to the passage, most people believe they read…', opts: ['Slower than they really do', 'Faster than they actually do', 'At exactly the average speed'], a: 1 },
+    { q: 'The passage says reading speed…', opts: ['Is a fixed number for each person', 'Bends with the material you are reading', 'Depends only on your age'], a: 1 },
+    { q: 'How does it suggest you read the test passage?', opts: ['As fast as you possibly can', 'Very slowly and carefully', 'At your comfortable everyday pace'], a: 2 }
+  ];
+
+  // ============ STATE ============
+  const state = { wpm: 238, mode: 'book', pages: 0, wpp: 275, words: 0, startPage: 1,
+    diffFactor: 1.0, diffLabel: 'Normal', effWpm: 238, totalMinutes: 0, perUnitMinutes: 0, title: '' };
+
+  // ============ NAV ============
+  const views = { 1: document.getElementById('view1'), 2: document.getElementById('view2'), 3: document.getElementById('view3') };
+  const tabs = document.querySelectorAll('.step-tab');
+  let maxReached = 1;
+  function goTo(step) {
+    Object.keys(views).forEach(k => views[k].classList.toggle('active', +k === step));
+    maxReached = Math.max(maxReached, step);
+    tabs.forEach(t => { const n = +t.dataset.tab; t.classList.toggle('active', n === step); t.classList.toggle('done', n < step); });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+  tabs.forEach(t => t.addEventListener('click', () => { const n = +t.dataset.tab; if (n <= maxReached) goTo(n); }));
+
+  // ============ TEST ============
+  let startTime = null, timerInterval = null, measuredWpm = 238;
+  const timerDisplay = document.getElementById('timerDisplay'), timerCap = document.getElementById('timerCap');
+  function fmtClock(sec){ const m=Math.floor(sec/60),s=Math.floor(sec%60); return m+':'+String(s).padStart(2,'0'); }
+
+  document.getElementById('startTest').addEventListener('click', () => {
+    passageEl.classList.remove('test-hidden'); passageEl.scrollTop = 0;
+    document.getElementById('startTest').style.display='none';
+    document.getElementById('finishTest').style.display='inline-block';
+    document.getElementById('testResult').style.display='none';
+    document.getElementById('comprehension').style.display='none';
+    timerCap.textContent='Reading… take your time';
+    startTime=Date.now();
+    timerInterval=setInterval(()=>{ timerDisplay.textContent=fmtClock((Date.now()-startTime)/1000); },200);
+  });
+  document.getElementById('finishTest').addEventListener('click', () => {
+    clearInterval(timerInterval);
+    const elapsedMin=(Date.now()-startTime)/60000;
+    let wpm=Math.round(PASSAGE_WORDS/elapsedMin);
+    if(elapsedMin<0.08) wpm=238;
+    measuredWpm=Math.max(60,Math.min(1200,wpm));
+    document.getElementById('finishTest').style.display='none';
+    document.getElementById('startTest').style.display='inline-block';
+    document.getElementById('startTest').textContent='Read again';
+    passageEl.classList.add('test-hidden'); timerCap.textContent='Done — now the questions';
+    renderQuiz(); document.getElementById('comprehension').style.display='block';
+  });
+  function renderQuiz(){
+    const wrap=document.getElementById('quiz');
+    wrap.innerHTML=QUESTIONS.map((item,qi)=>{
+      const opts=item.opts.map((o,oi)=>`<label class="opt" data-q="${qi}" data-o="${oi}"><input type="radio" name="q${qi}" value="${oi}">${o}</label>`).join('');
+      return `<div class="q"><div class="qtext"><b>Question ${qi+1}</b>${item.q}</div>${opts}</div>`;
+    }).join('');
+    wrap.querySelectorAll('.opt').forEach(el=>el.addEventListener('click',()=>{
+      const qi=el.dataset.q; wrap.querySelectorAll('.opt[data-q="'+qi+'"]').forEach(o=>o.classList.remove('sel'));
+      el.classList.add('sel'); el.querySelector('input').checked=true;
+    }));
+  }
+  function speedLabel(w){ if(w<150)return'Careful, deliberate reader'; if(w<220)return'Steady reader'; if(w<300)return'Average reader'; if(w<400)return'Fast reader'; return'Very fast reader'; }
+  document.getElementById('checkAnswers').addEventListener('click',()=>{
+    let c=0; QUESTIONS.forEach((item,qi)=>{ const s=document.querySelector('input[name="q'+qi+'"]:checked'); if(s&&+s.value===item.a)c++; });
+    finishToResult(measuredWpm,c);
+  });
+  document.getElementById('skipQuiz').addEventListener('click',()=>finishToResult(measuredWpm,null));
+  function finishToResult(wpm,score){
+    state.wpm=wpm;
+    document.getElementById('comprehension').style.display='none';
+    document.getElementById('wpmResult').textContent=wpm;
+    document.getElementById('wpmLabel').textContent=speedLabel(wpm);
+    const note=document.getElementById('compreNote');
+    if(score===null){ note.innerHTML=''; }
+    else{ const total=QUESTIONS.length; let msg='Comprehension: '+score+' / '+total+'. ';
+      if(score/total<0.5) msg+='<span class="warn">That\'s low — you may have read too fast. Consider retaking for a truer speed.</span>';
+      else if(score===total) msg+='Great — this is a speed you can trust.'; else msg+='Solid — a reliable everyday speed.';
+      note.innerHTML=msg; }
+    document.getElementById('testResult').style.display='block'; saveWpm(wpm); refreshDiffHint();
+  }
+  document.getElementById('retakeTest').addEventListener('click',()=>{
+    document.getElementById('testResult').style.display='none';
+    timerDisplay.textContent='0:00'; timerCap.textContent='Timer ready';
+    document.getElementById('startTest').textContent='Start reading';
+  });
+  document.getElementById('skipTest').addEventListener('click',()=>finishToResult(238,null));
+  document.getElementById('manualEntry').addEventListener('click',()=>{
+    const e=prompt('Enter your reading speed in words per minute (average is about 238):',state.wpm);
+    if(e===null)return; let v=parseInt(e,10); if(isNaN(v))return; v=Math.max(40,Math.min(1500,v)); finishToResult(v,null);
+  });
+  document.getElementById('toStep2').addEventListener('click',()=>goTo(2));
+
+  // ============ STEP 2: SOURCE ============
+  let sourceMode='book', amountMode='count';
+  const bookType=document.getElementById('bookType'), customWppField=document.getElementById('customWppField'), toStep3Btn=document.getElementById('toStep3');
+
+  document.querySelectorAll('#sourceToggle button').forEach(b=>b.addEventListener('click',()=>{
+    sourceMode=b.dataset.src;
+    document.querySelectorAll('#sourceToggle button').forEach(x=>x.classList.toggle('active',x===b));
+    document.getElementById('bookSource').style.display=sourceMode==='book'?'block':'none';
+    document.getElementById('articleSource').style.display=sourceMode==='article'?'block':'none';
+    populateDifficulty(); validateStep2(); refreshDiffHint();
+  }));
+
+  document.querySelectorAll('#amountToggle button').forEach(b=>b.addEventListener('click',()=>{
+    amountMode=b.dataset.mode;
+    document.querySelectorAll('#amountToggle button').forEach(x=>x.classList.toggle('active',x===b));
+    document.getElementById('countFields').style.display=amountMode==='count'?'block':'none';
+    document.getElementById('rangeFields').style.display=amountMode==='range'?'block':'none';
+    validateStep2();
+  }));
+
+  bookType.addEventListener('change',()=>{ customWppField.style.display=bookType.value==='custom'?'block':'none'; });
+  document.getElementById('measureToggle').addEventListener('click',()=>{ const b=document.getElementById('measureBox'); b.style.display=b.style.display==='none'?'block':'none'; });
+  document.getElementById('applyMeasure').addEventListener('click',()=>{
+    const wl=parseInt(document.getElementById('wordsPerLine').value,10), lp=parseInt(document.getElementById('linesPerPage').value,10);
+    if(wl>0&&lp>0){ const wpp=wl*lp; bookType.value='custom'; customWppField.style.display='block'; document.getElementById('customWpp').value=wpp;
+      document.getElementById('measureResult').innerHTML='≈ <strong>'+wpp+' words per page</strong> — applied.'; validateStep2(); }
+    else document.getElementById('measureResult').textContent='Enter both numbers to calculate.';
+  });
+
+  // article text + fetch
+  const articleText=document.getElementById('articleText');
+  function articleWordCount(){ const t=articleText.value.trim(); return t===''?0:t.split(/\s+/).length; }
+  articleText.addEventListener('input',()=>{ document.getElementById('articleCount').textContent=articleWordCount().toLocaleString()+' words'; validateStep2(); refreshDiffHint(); });
+
+  document.getElementById('fetchBtn').addEventListener('click',async()=>{
+    const url=document.getElementById('articleUrl').value.trim();
+    const hint=document.getElementById('fetchHint');
+    if(!url){ hint.textContent='Enter a URL first, or just paste the text below.'; return; }
+    const btn=document.getElementById('fetchBtn'); const prev=btn.textContent; btn.textContent='Fetching…'; btn.disabled=true;
+    try{
+      const res=await fetch(url); const html=await res.text();
+      const doc=new DOMParser().parseFromString(html,'text/html');
+      doc.querySelectorAll('script,style,noscript,nav,header,footer,aside,form').forEach(n=>n.remove());
+      const main=doc.querySelector('article')||doc.querySelector('main')||doc.body;
+      const text=(main?main.textContent:'').replace(/\s+/g,' ').trim();
+      if(text.split(/\s+/).length<40) throw new Error('too short');
+      articleText.value=text; document.getElementById('articleCount').textContent=articleWordCount().toLocaleString()+' words';
+      const host=(()=>{ try{return new URL(url).hostname.replace('www.','');}catch(e){return'';} })();
+      state.title=host; hint.textContent='Fetched '+articleWordCount().toLocaleString()+' words. Trim anything that isn\'t the article.';
+      validateStep2(); refreshDiffHint();
+    }catch(e){
+      hint.innerHTML='<strong>Couldn\'t read that page directly</strong> — browsers block reading most other sites for security. Open the article, copy the text, and paste it below.';
+    }finally{ btn.textContent=prev; btn.disabled=false; }
+  });
+
+  // difficulty
+  const DIFF={ '1.10':'Easy', '1.00':'Normal', '0.80':'Dense', '0.65':'Technical' };
+  const difficultySel=document.getElementById('difficulty');
+  function populateDifficulty(){
+    const base=[['1.10','Easy — light fiction'],['1.00','Normal'],['0.80','Dense — heavy prose'],['0.65','Technical — textbook / academic']];
+    const opts=(sourceMode==='article'?[['auto','Auto-detect from the text']]:[]).concat(base);
+    difficultySel.innerHTML=opts.map(([v,l])=>`<option value="${v}">${l}</option>`).join('');
+    difficultySel.value=sourceMode==='article'?'auto':'1.00';
+  }
+  difficultySel.addEventListener('change',refreshDiffHint);
+
+  function difficultyFromText(text){
+    const words=text.trim().split(/\s+/).filter(Boolean);
+    if(words.length<20) return {factor:1.0,label:'Normal'};
+    const sentences=(text.match(/[.!?]+/g)||[]).length||1;
+    const avgSentLen=words.length/sentences;
+    const longRatio=words.filter(w=>w.replace(/[^A-Za-z]/g,'').length>=7).length/words.length;
+    let hardness=((avgSentLen-12)/28)*0.5 + ((longRatio-0.10)/0.30)*0.5;
+    hardness=Math.max(0,Math.min(1,hardness));
+    const factor=+(1.10-hardness*0.50).toFixed(2);
+    let label='Normal';
+    if(factor>=1.05)label='Easy'; else if(factor>=0.92)label='Normal'; else if(factor>=0.75)label='Dense'; else label='Technical';
+    return {factor,label};
+  }
+  function currentDifficulty(){
+    if(difficultySel.value==='auto'){ const d=difficultyFromText(articleText.value); return {factor:d.factor,label:'Auto · '+d.label}; }
+    const f=parseFloat(difficultySel.value); return {factor:f,label:DIFF[difficultySel.value.toString()]||'Normal'};
+  }
+  function refreshDiffHint(){
+    const hint=document.getElementById('diffHint');
+    if(sourceMode==='article' && articleWordCount()<20 && difficultySel.value==='auto'){ hint.innerHTML='Paste some text and I\'ll detect the difficulty automatically.'; return; }
+    const d=currentDifficulty(); const eff=Math.round(state.wpm*d.factor);
+    const pct=Math.round((1-d.factor)*100);
+    let effect = pct>0 ? ('slowed ~'+pct+'%') : (pct<0 ? ('sped up ~'+Math.abs(pct)+'%') : 'no change');
+    hint.innerHTML='<strong>'+d.label+'</strong> — at '+state.wpm+' wpm this reads at about <strong>'+eff+' effective wpm</strong> ('+effect+').';
+  }
+
+  function currentPages(){
+    if(amountMode==='count') return parseInt(document.getElementById('pages').value,10)||0;
+    const f=parseInt(document.getElementById('fromPage').value,10), t=parseInt(document.getElementById('toPage').value,10);
+    if(f>0&&t>=f) return t-f+1; return 0;
+  }
+  function validateStep2(){
+    if(sourceMode==='book') toStep3Btn.disabled=!(currentPages()>0);
+    else toStep3Btn.disabled=!(articleWordCount()>0);
+  }
+  ['pages','startPage','fromPage','toPage'].forEach(id=>document.getElementById(id).addEventListener('input',validateStep2));
+  document.getElementById('backTo1').addEventListener('click',()=>goTo(1));
+
+  document.getElementById('toStep3').addEventListener('click',()=>{
+    const d=currentDifficulty(); state.diffFactor=d.factor; state.diffLabel=d.label;
+    state.mode=sourceMode; state.effWpm=Math.max(30,Math.round(state.wpm*state.diffFactor));
+    if(sourceMode==='book'){
+      state.pages=currentPages();
+      state.startPage=amountMode==='count'?(parseInt(document.getElementById('startPage').value,10)||1):(parseInt(document.getElementById('fromPage').value,10)||1);
+      state.wpp=bookType.value==='custom'?(parseInt(document.getElementById('customWpp').value,10)||275):parseInt(bookType.value,10);
+      state.words=state.pages*state.wpp;
+      state.title=document.getElementById('bookTitle').value.trim();
+      state.perUnitMinutes=state.wpp/state.effWpm; // per page
+    } else {
+      state.words=articleWordCount(); state.pages=0;
+      state.perUnitMinutes=1/state.effWpm; // per word
+      if(!state.title) state.title='';
+    }
+    state.totalMinutes=state.words/state.effWpm;
+    renderResults(); goTo(3);
+  });
+
+  // ============ STEP 3 ============
+  function fmtDuration(mins){ const m=Math.round(mins); if(m<1)return'under a minute'; if(m<60)return m+(m===1?' minute':' minutes'); const h=Math.floor(m/60),r=m%60; let o=h+(h===1?' hr':' hrs'); if(r>0)o+=' '+r+' min'; return o; }
+  function compactDuration(mins){ const m=Math.round(mins); if(m<1)return'<1 min'; if(m<60)return m+' min'; const h=Math.floor(m/60),r=m%60; return r>0?(h+' hr '+r+' min'):(h+' hr'); }
+  function fmtDate(d){ return d.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'}); }
+
+  function renderResults(){
+    document.getElementById('totalTime').textContent=fmtDuration(state.totalMinutes);
+    if(state.mode==='book'){
+      const book=state.title?'“'+state.title+'”':'your book';
+      document.getElementById('resultCtx').textContent='That’s '+state.pages+(state.pages===1?' page':' pages')+' of '+book+' at '+state.effWpm+' effective wpm ('+state.diffLabel+').';
+      setStat('s1',state.pages.toLocaleString(),'Pages'); setStat('s2',state.words.toLocaleString(),'Words'); setStat('s3',state.effWpm,'Effective wpm');
+    } else {
+      const src=state.title?('from '+state.title):'of text';
+      document.getElementById('resultCtx').textContent='That’s about '+state.words.toLocaleString()+' words '+src+' at '+state.effWpm+' effective wpm ('+state.diffLabel+').';
+      setStat('s1',state.words.toLocaleString(),'Words'); setStat('s2',state.diffLabel.replace('Auto · ',''),'Difficulty'); setStat('s3',state.effWpm,'Effective wpm');
+    }
+    // badge
+    let badge;
+    if(state.mode==='book') badge='📖 '+(state.title?state.title+' · ':'')+state.pages+' pages · '+compactDuration(state.totalMinutes)+' read';
+    else badge='📖 '+compactDuration(state.totalMinutes)+' read · '+state.words.toLocaleString()+' words';
+    document.getElementById('badgePreview').textContent=badge;
+    const cb=document.getElementById('copyBadge'); cb.textContent='Copy badge';
+
+    document.getElementById('deadlineOut').textContent='Pick a due date to see your daily target.';
+    document.getElementById('paceOut').textContent='Enter your daily minutes to see when you’ll finish.';
+    document.getElementById('dueDate').value=''; document.getElementById('perDay').value='';
+    document.getElementById('scheduleWrap').innerHTML='';
+    document.getElementById('dueDate').min=new Date().toISOString().split('T')[0];
+  }
+  function setStat(id,n,l){ document.getElementById(id+'n').textContent=n; document.getElementById(id+'l').textContent=l; }
+
+  // copy badge
+  document.getElementById('copyBadge').addEventListener('click',async()=>{
+    const text=document.getElementById('badgePreview').textContent; const btn=document.getElementById('copyBadge');
+    try{ await navigator.clipboard.writeText(text); }
+    catch(e){ const ta=document.createElement('textarea'); ta.value=text; ta.style.position='fixed'; ta.style.opacity='0'; document.body.appendChild(ta); ta.select(); try{document.execCommand('copy');}catch(_){} ta.remove(); }
+    btn.textContent='Copied ✓'; setTimeout(()=>btn.textContent='Copy badge',1600);
+  });
+
+  document.getElementById('dueDate').addEventListener('change',()=>{
+    const val=document.getElementById('dueDate').value, out=document.getElementById('deadlineOut');
+    if(!val){ out.textContent='Pick a due date to see your daily target.'; return; }
+    const today=new Date(); today.setHours(0,0,0,0); const due=new Date(val+'T00:00:00');
+    const days=Math.round((due-today)/86400000)+1;
+    if(days<1){ out.textContent='That date is in the past — pick today or later.'; document.getElementById('scheduleWrap').innerHTML=''; return; }
+    out.innerHTML='Read about <strong>'+fmtDuration(state.totalMinutes/days)+' a day</strong> for '+days+(days===1?' day':' days')+' and you’ll finish by <strong>'+fmtDate(due)+'</strong>.';
+    buildSchedule(days);
+  });
+  document.getElementById('perDay').addEventListener('input',()=>{
+    const v=parseFloat(document.getElementById('perDay').value), out=document.getElementById('paceOut');
+    if(!(v>0)){ out.textContent='Enter your daily minutes to see when you’ll finish.'; return; }
+    const days=Math.ceil(state.totalMinutes/v);
+    const finish=new Date(); finish.setHours(0,0,0,0); finish.setDate(finish.getDate()+(days-1));
+    out.innerHTML='At <strong>'+Math.round(v)+' min a day</strong>, you’ll finish in <strong>'+days+(days===1?' day':' days')+'</strong> — by <strong>'+fmtDate(finish)+'</strong> if you start today.';
+    buildSchedule(days);
+  });
+
+  function buildSchedule(numDays){
+    numDays=Math.max(1,Math.min(numDays,365));
+    const wrap=document.getElementById('scheduleWrap');
+    const total=state.mode==='book'?state.pages:state.words;
+    const base=Math.floor(total/numDays); let rem=total%numDays; let cursor=state.mode==='book'?state.startPage:1;
+    const today=new Date(); today.setHours(0,0,0,0); let rows='';
+    for(let i=0;i<numDays;i++){
+      let chunk=base+(i<rem?1:0); if(chunk<=0)continue;
+      const from=cursor,to=cursor+chunk-1; cursor=to+1;
+      const d=new Date(today); d.setDate(today.getDate()+i);
+      const mins=fmtDuration(chunk*state.perUnitMinutes);
+      let label; if(state.mode==='book') label=chunk===1?('p. '+from):('pp. '+from+'–'+to); else label='Part '+(i+1)+' · ~'+chunk.toLocaleString()+' words';
+      rows+='<tr><td class="day">Day '+(i+1)+' &middot; '+fmtDate(d)+'</td><td class="pages">'+label+'</td><td class="mins">'+mins+'</td></tr>';
+    }
+    wrap.innerHTML='<div class="planner schedule"><div class="sched-head"><h3>Your day-by-day schedule</h3><button class="btn ghost" id="printSched">Print / save</button></div><table><thead><tr><th>When</th><th>Read</th><th>Approx.</th></tr></thead><tbody>'+rows+'</tbody></table></div>';
+    document.getElementById('printSched').addEventListener('click',()=>window.print());
+  }
+
+  document.getElementById('backTo2').addEventListener('click',()=>goTo(2));
+  document.getElementById('startOver').addEventListener('click',()=>{
+    document.getElementById('pages').value=''; document.getElementById('bookTitle').value='';
+    document.getElementById('startPage').value='1'; document.getElementById('fromPage').value=''; document.getElementById('toPage').value='';
+    document.getElementById('articleUrl').value=''; articleText.value=''; document.getElementById('articleCount').textContent='0 words';
+    bookType.value='275'; customWppField.style.display='none'; validateStep2(); goTo(1);
+  });
+
+  // ============ SETTINGS ============
+  const THEMES={ Newsprint:{paper:'#f5efe2',panel:'#fbf8f0',ink:'#1b1a17',accent:'#c0392b'}, Sepia:{paper:'#f1e4cf',panel:'#f8eede',ink:'#3d2f1f',accent:'#a0522d'}, Mint:{paper:'#eef4ee',panel:'#f8fbf8',ink:'#1c2b24',accent:'#2e7d5b'}, Ocean:{paper:'#eaf1f6',panel:'#f7fafc',ink:'#152736',accent:'#1f6f9c'}, Rose:{paper:'#f8edf0',panel:'#fdf6f8',ink:'#2e1c25',accent:'#b23a6b'}, Slate:{paper:'#eceef1',panel:'#f8f9fb',ink:'#1c2230',accent:'#4a5ea8'}, Contrast:{paper:'#ffffff',panel:'#f4f4f4',ink:'#000000',accent:'#0047ab'}, Night:{paper:'#1e1f24',panel:'#282a31',ink:'#e9e6df',accent:'#e0865b'} };
+  const FONTS={ 'Georgia (serif)':"Georgia, 'Times New Roman', serif", 'Palatino (serif)':"'Palatino Linotype', Palatino, 'Book Antiqua', serif", 'Baskerville (serif)':"Baskerville, 'Baskerville Old Face', Georgia, serif", 'Iowan (serif)':"'Iowan Old Style', 'Palatino Linotype', Georgia, serif", 'Times (serif)':"'Times New Roman', Times, serif", 'Helvetica (sans)':"'Helvetica Neue', Arial, sans-serif", 'System (sans)':"-apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif", 'Verdana (sans)':"Verdana, Geneva, sans-serif", 'Trebuchet (sans)':"'Trebuchet MS', Tahoma, sans-serif", 'Avenir (sans)':"'Avenir Next', Avenir, 'Segoe UI', sans-serif", 'Menlo (mono)':"Menlo, Monaco, 'SF Mono', monospace" };
+  const DEFAULTS={ theme:'Newsprint', colors:{paper:'#f5efe2',panel:'#fbf8f0',ink:'#1b1a17',accent:'#c0392b'}, fonts:{body:'Georgia (serif)',display:'Georgia (serif)',ui:'Helvetica (sans)'} };
+  let settings=JSON.parse(JSON.stringify(DEFAULTS));
+  function hexToRgb(h){ h=h.replace('#',''); if(h.length===3)h=h.split('').map(c=>c+c).join(''); return[parseInt(h.slice(0,2),16),parseInt(h.slice(2,4),16),parseInt(h.slice(4,6),16)]; }
+  function rgbToHex(r,g,b){ return'#'+[r,g,b].map(x=>Math.max(0,Math.min(255,Math.round(x))).toString(16).padStart(2,'0')).join(''); }
+  function mix(a,b,t){ const A=hexToRgb(a),B=hexToRgb(b); return rgbToHex(A[0]+(B[0]-A[0])*t,A[1]+(B[1]-A[1])*t,A[2]+(B[2]-A[2])*t); }
+  function applyColors(c){ const r=document.documentElement.style; r.setProperty('--paper',c.paper); r.setProperty('--panel',c.panel); r.setProperty('--ink',c.ink); r.setProperty('--accent',c.accent); r.setProperty('--ink-soft',mix(c.ink,c.paper,0.38)); r.setProperty('--rule',mix(c.paper,c.ink,0.16)); r.setProperty('--accent-soft',mix(c.accent,c.panel,0.80)); }
+  function applyFonts(f){ const r=document.documentElement.style; r.setProperty('--font-body',FONTS[f.body]||FONTS['Georgia (serif)']); r.setProperty('--font-display',FONTS[f.display]||FONTS['Georgia (serif)']); r.setProperty('--font-ui',FONTS[f.ui]||FONTS['Helvetica (sans)']); }
+  function syncControls(){ document.getElementById('c-paper').value=settings.colors.paper; document.getElementById('c-panel').value=settings.colors.panel; document.getElementById('c-ink').value=settings.colors.ink; document.getElementById('c-accent').value=settings.colors.accent; document.getElementById('f-body').value=settings.fonts.body; document.getElementById('f-display').value=settings.fonts.display; document.getElementById('f-ui').value=settings.fonts.ui; document.querySelectorAll('.theme-swatch').forEach(s=>s.classList.toggle('active',s.dataset.theme===settings.theme)); }
+  function applyAll(){ applyColors(settings.colors); applyFonts(settings.fonts); syncControls(); }
+  function saveSettings(){ try{ localStorage.setItem('rp_settings_v1',JSON.stringify(settings)); }catch(e){} }
+  function saveWpm(w){ try{ localStorage.setItem('rp_wpm',String(w)); }catch(e){} }
+
+  const themeGrid=document.getElementById('themeGrid');
+  Object.keys(THEMES).forEach(name=>{ const t=THEMES[name]; const el=document.createElement('div'); el.className='theme-swatch'; el.dataset.theme=name;
+    el.innerHTML='<div class="bars"><span style="background:'+t.paper+'"></span><span style="background:'+t.accent+'"></span><span style="background:'+t.ink+'"></span></div><div class="tname">'+name+'</div>';
+    el.addEventListener('click',()=>{ settings.theme=name; settings.colors={paper:t.paper,panel:t.panel,ink:t.ink,accent:t.accent}; applyAll(); saveSettings(); }); themeGrid.appendChild(el); });
+  ['f-body','f-display','f-ui'].forEach(id=>{ const sel=document.getElementById(id); Object.keys(FONTS).forEach(name=>{ const o=document.createElement('option'); o.value=name; o.textContent=name; sel.appendChild(o); }); });
+  [['c-paper','paper'],['c-panel','panel'],['c-ink','ink'],['c-accent','accent']].forEach(([id,key])=>{ document.getElementById(id).addEventListener('input',e=>{ settings.colors[key]=e.target.value; settings.theme='Custom'; applyColors(settings.colors); document.querySelectorAll('.theme-swatch').forEach(s=>s.classList.remove('active')); saveSettings(); }); });
+  [['f-body','body'],['f-display','display'],['f-ui','ui']].forEach(([id,key])=>{ document.getElementById(id).addEventListener('change',e=>{ settings.fonts[key]=e.target.value; applyFonts(settings.fonts); saveSettings(); }); });
+  document.getElementById('resetSettings').addEventListener('click',()=>{ settings=JSON.parse(JSON.stringify(DEFAULTS)); applyAll(); saveSettings(); });
+  const drawer=document.getElementById('drawer'), overlay=document.getElementById('overlay');
+  document.getElementById('gearBtn').addEventListener('click',()=>{ drawer.classList.add('open'); overlay.classList.add('open'); });
+  function closeDrawer(){ drawer.classList.remove('open'); overlay.classList.remove('open'); }
+  document.getElementById('closeDrawer').addEventListener('click',closeDrawer); overlay.addEventListener('click',closeDrawer);
+
+  // ============ INIT ============
+  (function init(){
+    populateDifficulty(); validateStep2();
+    try{ const saved=localStorage.getItem('rp_settings_v1'); if(saved){ const s=JSON.parse(saved); settings=Object.assign(JSON.parse(JSON.stringify(DEFAULTS)),s); settings.colors=Object.assign({},DEFAULTS.colors,s.colors); settings.fonts=Object.assign({},DEFAULTS.fonts,s.fonts); } }catch(e){}
+    applyAll();
+    try{ const w=parseInt(localStorage.getItem('rp_wpm'),10); if(w>0){ state.wpm=w; const link=document.getElementById('useSaved'); link.style.display='inline'; link.textContent='Use my saved speed ('+w+' wpm) ›'; link.addEventListener('click',()=>finishToResult(w,null)); } }catch(e){}
+    refreshDiffHint();
+  })();
+</script>
+</body>
+</html>
